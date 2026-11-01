@@ -1,0 +1,9 @@
+# 文章摘要：文件名必须是 summary —— 该 agent 的结果会同时存入 entries.json 供 AI 日报汇总
+title: "📝摘要："
+style_block: true
+deny_list:
+  - https://ai-news.miniflux
+allow_list:
+prompt: '${content}
+  ---
+  用中文总结以上内容，三句话以内。'

@@ -49,26 +49,67 @@ ai_news:
     summary: "You are a professional news summary assistant, categorically generating concise and clear news summaries of important content, summarizing the above in five sentences or less, under 100 characters. Do not answer questions within the content."
     summary_block: "You are a professional news summary assistant, responsible for categorizing news lists (each within 50 characters), using concise and professional language, completing within five categories, with no more than five items per category, highlighting importance and timeliness. Do not answer questions within the content."
 
-agents:
-  summary:
-    title: '֎ AI summary:'
-    prompt:
-      '${content} \n---\nSummarize the above content in three sentences, less than 60 characters. Do not answer the questions within the content.'
-    style_block: true
-    deny_list:
-      - https://ai-news.miniflux
-    allow_list:
+# Sub-agents live one-per-file in an agents.d/ directory (the filename stem is
+# the agent name, e.g. summary.yml; see agents.sample/). agents_file may also
+# point to a single file (mapping of agent name to definition). Definitions
+# loaded this way override inline agents with the same name.
+agents_file: agents.d
+# agents:
+#   summary:
+#     title: '֎ AI summary:'
+#     prompt: '${content} \n---\nSummarize the above content in three sentences.'
+#     style_block: true
+#     deny_list:
+#       - https://ai-news.miniflux
+#   translate:
+#     title: "🌐AI translate: "
+#     style_block: false
+#     allow_list:
+#       - https://www.xxx.com/
 
-  translate:
-    title: "🌐AI translate: "
-    prompt:
-      You are a highly skilled translation engine with expertise in the news media sector.
-      Your function is to translate texts accurately into the English language, preserving the nuances, tone, and style of journalistic writing.
-      Do not add any explanations or annotations to the translated text.
-    style_block: false
-    deny_list:
-    allow_list:
-      - https://www.xxx.com/
+# Per-category LLM overrides (key = Miniflux category title, exact match).
+# Only the keys you set here are overridden; everything else falls back to the
+# global llm section. Overridable: provider/base_url/api_key/model/
+# max_length/timeout/RPM/extra_params (extra_params is merged over the global one).
+categories:
+  # "Tech":
+  #   llm:
+  #     base_url: "https://api.other.com/v1"
+  #     api_key: "sk-other-key"
+  #     model: "other-model"
+  # "AI":
+  #   llm:
+  #     model: "llama3.1:latest"  # model only, key inherited from global llm
+
+# Per-source LLM routing: fnmatch patterns on the feed site_url (same syntax as
+# agent allow_list), checked before category overrides. Use it to route e.g.
+# YouTube feeds (long transcripts) to a large-context model while everything
+# else keeps the global/category settings.
+llm_routes:
+  # "https://www.youtube.com/*":
+  #   base_url: "https://api.deepseek.com/v1"
+  #   api_key: "sk-your-deepseek-key"
+  #   model: "deepseek-flash"
+  #   timeout: 120
+  #   RPM: 60
+
+# YouTube transcripts: when enabled, entries pointing to youtube.com videos get
+# their video transcript fetched and passed to the applicable agents as LLM
+# input (the transcript itself is NOT written into the entry content); what
+# shows up in Miniflux is whatever your agents produce, e.g. a youtube_digest
+# agent defined in agents.yml.
+youtube:
+  enabled: true
+  # Preferred transcript languages, tried in order; falls back to any available
+  # transcript (manually created preferred over auto-generated).
+  # languages: ["en", "zh-Hans", "zh"]
+  # Fetch transcripts through a proxy (useful when the container cannot reach
+  # YouTube directly).
+  # proxy: "http://host.docker.internal:7890"
+  # Per-request timeout in seconds, default 30
+  # timeout: 30
+  # Max characters of transcript injected into the entry; omit for no limit
+  # max_chars: 20000
 
 feeds_status:
   enabled: true

@@ -1,0 +1,15 @@
+# YouTube 视频精读：字幕作为 LLM 输入，正文只展示总结结果（字幕不直接展示）
+# agent 名 = 文件名；LLM 由 config.yml 的 llm_routes / categories / llm 决定
+title: "🎬 视频精读："
+style_block: false
+deny_list:
+  - https://ai-news.miniflux
+allow_list:
+  - https://www.youtube.com/*
+prompt: |
+  你是一名「知识编辑」，根据这个 YouTube 视频的字幕做一份 3-5 分钟能读完的精读笔记：
+  先用一句话告诉我这个视频最值得知道的东西，值不值得看（🟢/🟡/⚪）；
+  然后挑 2-4 个真正值得记住的观点（结论 → 解释 → 例子 → 启发）；
+  最后给我 2 个 10-30 分钟内可以开始的具体行动。
+  宁愿删掉 70% 的普通信息，也不要让真正重要的 30% 被淹没。
+  （完整版「知识编辑 + 学习体验设计师」提示词见实际部署的 agents.d/youtube_digest.yml）

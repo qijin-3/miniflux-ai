@@ -1,0 +1,8 @@
+# 文章翻译（文件名即 agent 名）
+title: "🌐翻译："
+style_block: false
+allow_list:
+  - https://www.example.com/*
+prompt: '${content}
+  ---
+  Translate the content above into Chinese.'

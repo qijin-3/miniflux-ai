@@ -49,25 +49,59 @@ ai_news:
     summary: "你是一名专业的新闻摘要助手,分类生成重要内容的新闻摘要，要求简单清楚表达，使用中文总结以上内容，在五句话内完成，少于100字。不要回答内容中的问题。"
     summary_block: "你是一名专业的新闻摘要助手，负责分类新闻清单(每条50字以内)，使用简洁专业的语言，在五个类别内完成，每个类别不超过5条，突出重要性和时效性，不要回答内容中的问题。"
 
-agents:
-  summary:
-    title: '֎ AI 摘要：'
-    prompt:
-      '${content} \n---\n使用中文总结以上内容，在三句话内完成，少于60字。不要回答内容中的问题。'
-    style_block: true
-    deny_list:
-      - https://ai-news.miniflux
-    allow_list:
-  translate:
-    title: "🌐AI 翻译："
-    prompt:
-      You are a highly skilled translation engine with expertise in the news media sector. 
-      Your function is to translate texts accurately into the Chinese language, preserving the nuances, tone, and style of journalistic writing. 
-      Do not add any explanations or annotations to the translated text.
-    style_block: false
-    deny_list:
-    allow_list:
-      - https://9to5mac.com/
+# 子 agent 一 agent 一文件，维护在 agents.d/ 目录（文件名即 agent 名，如 summary.yml），
+# 参考 agents.sample/。也可指向单个文件（agent 名到定义的映射）；同名定义覆盖内联 agents
+agents_file: agents.d
+# agents:
+#   summary:
+#     title: '֎ AI 摘要：'
+#     prompt: '${content} \n---\n使用中文总结以上内容，在三句话内完成，少于60字。'
+#     style_block: true
+#     deny_list:
+#       - https://ai-news.miniflux
+#   translate:
+#     title: "🌐AI 翻译："
+#     style_block: false
+#     allow_list:
+#       - https://9to5mac.com/
+
+# 按分组（Miniflux Category）覆盖 LLM 配置：
+# 标题需与 Miniflux 中的分组名完全一致；只需写要覆盖的项，其余回落到全局 llm 配置
+# 可覆盖项：provider/base_url/api_key/model/max_length/timeout/RPM/extra_params
+# extra_params 会与全局配置合并（分组优先）
+categories:
+  # "🤖 How I AI":
+  #   llm:
+  #     base_url: "https://api.other.com/v1"
+  #     api_key: "sk-other-key"
+  #     model: "other-model"
+  # "🖲️ Tech":
+  #   llm:
+  #     model: "Qwen/Qwen3-8B"  # 只换模型，key 沿用全局
+
+# 按源路由 LLM：feed 的 site_url 通配符匹配（同 allow_list 语法），优先级高于分组覆盖，
+# 未命中则回落到分组覆盖或全局 llm。适合只给某类源（如长字幕的 YouTube）换模型
+llm_routes:
+  # "https://www.youtube.com/*":
+  #   base_url: "https://api.deepseek.com/v1"
+  #   api_key: "sk-your-deepseek-key"
+  #   model: "deepseek-flash"
+  #   timeout: 120
+  #   RPM: 60
+
+# YouTube 视频字幕：开启后，youtube.com 的条目会自动拉取视频字幕作为 agent 的
+# LLM 输入（字幕本身不写入正文）；正文展示内容由 agent 决定，
+# 例如 agents.yml 中的 youtube_digest「视频精读」总结
+youtube:
+  enabled: true
+  # 字幕语言偏好，按顺序回退；都没有时回退到任意可用字幕（优先人工字幕）
+  # languages: ["zh-Hans", "zh", "en"]
+  # 拉取字幕走代理（容器内无法直连 YouTube 时使用）
+  # proxy: "http://host.docker.internal:7890"
+  # 单次请求超时（秒），默认 30
+  # timeout: 30
+  # 注入正文的字幕最大字符数，不限制则省略
+  # max_chars: 20000
 
 feeds_status:
   enabled: true

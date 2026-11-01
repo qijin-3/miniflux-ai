@@ -8,6 +8,9 @@ This project integrates with Miniflux to fetch RSS feed content via API or webho
 - **Miniflux Integration**: Seamlessly fetch unread entries from Miniflux or trigger via webhook.
 - **Schedule Interval**: Specifies the time interval for requesting the miniflux api.
 - **LLM Processing**: Generate summaries, translations, etc. based on your chosen LLM agent.
+- **Per-Category LLM**: Route different Miniflux categories to different LLM models / API keys via the `categories` config section.
+- **Per-Source LLM Routing**: Route feeds by site_url pattern (`llm_routes`, e.g. send YouTube feeds with long transcripts to a large-context model) with priority over category overrides.
+- **YouTube Transcripts**: Automatically fetch video transcripts for YouTube entries and feed them to your agents (e.g. a `youtube_digest` agent that turns a 1-hour video into a 5-minute read); transcripts are LLM input only and never dumped into the entry content.
 - **AI News**: Use the LLM agent to generate AI morning and evening news from feed content.
 - **Flexible Configuration**: Easily modify or add new agents via the `config.yml` file.
 - **Markdown and HTML Support**: Outputs in Markdown or styled HTML blocks, depending on configuration.
@@ -58,7 +61,10 @@ The repository includes a template configuration file: `config.sample.yml`. Modi
 - **Miniflux**: Base URL and API key.
 - **LLM**: Model settings, API key, and endpoint.Add timeout, max_workers parameters due to multithreading
 - **AI News**: Schedule and prompts for daily news generation
-- **Agents**: Define each agent's prompt, allow_list/deny_list filters, and output style（`style_block` parameter controls whether the output is formatted as a code block in Markdown）.
+- **Agents**: Define each agent's prompt, allow_list/deny_list filters, and output style（`style_block` parameter controls whether the output is formatted as a code block in Markdown）. Agents can be defined inline or maintained in a separate `agents.yml` (set `agents_file: agents.yml`); definitions in the file override inline ones with the same name.
+- **Categories**: (optional) Per-category LLM overrides. The key is the exact Miniflux category title; any of `provider/base_url/api_key/model/max_length/timeout/RPM/extra_params` can be overridden, the rest fall back to the global `llm` section. Rate limits are tracked per provider credentials, so categories on different models/keys never throttle each other.
+- **LLM Routes**: (optional) Per-source LLM routing — fnmatch patterns on the feed site_url (same syntax as agent allow_list), checked with priority over category overrides, falling back to category/global settings when nothing matches.
+- **YouTube**: (optional) `youtube.enabled: true` fetches the transcript of youtube.com video entries (preferred languages via `youtube.languages`, any available transcript as fallback) and injects it into the entry content before agents run. `youtube.proxy` is available when the container cannot reach YouTube directly.
 
 
 ## Docker Setup
