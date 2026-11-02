@@ -10,12 +10,14 @@ from youtube_transcript_api.proxies import GenericProxyConfig
 from common.logger import logger
 
 # Space consecutive YouTube requests globally: a burst (e.g. subscribing to a
-# channel backfills dozens of videos) triggers YouTube IP rate-blocking
-MIN_REQUEST_INTERVAL_SECONDS = 10
+# channel backfills dozens of videos) triggers YouTube IP rate-blocking.
+# Observed threshold ~12-15 requests within a few minutes, so keep it slow.
+MIN_REQUEST_INTERVAL_SECONDS = 25
 # After a RequestBlocked/IpBlocked, back off progressively instead of probing
-# every poll (which would only prolong the block): 10m, 20m, 40m ... cap 2h
+# every poll. Observed blocks are short-lived rate limits, so cap low:
+# 10m, 20m, 30m ...
 BLOCK_COOLDOWN_BASE_SECONDS = 600
-BLOCK_COOLDOWN_MAX_SECONDS = 7200
+BLOCK_COOLDOWN_MAX_SECONDS = 1800
 
 _VIDEO_ID_RE = re.compile(
     r'(?:[?&]v=|youtu\.be/|/shorts/|/embed/|/live/)([A-Za-z0-9_-]{11})'
