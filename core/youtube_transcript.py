@@ -43,8 +43,23 @@ class _TimeoutSession(requests.Session):
         return super().request(*args, **kwargs)
 
 
+def _build_http_client(config):
+    session = _TimeoutSession(config.youtube_timeout)
+    if config.youtube_cookie_path:
+        from http.cookiejar import MozillaCookieJar
+        try:
+            cookie_jar = MozillaCookieJar(config.youtube_cookie_path)
+            cookie_jar.load(ignore_discard=True, ignore_expires=True)
+            session.cookies = cookie_jar
+            logger.info(f"Loaded {len(cookie_jar)} YouTube cookies from {config.youtube_cookie_path}")
+        except Exception as e:
+            # missing/empty/invalid cookie file must not break entry processing
+            logger.warning(f"Could not load YouTube cookies from {config.youtube_cookie_path}: {e}")
+    return session
+
+
 def _get_api(config):
-    cache_key = (config.youtube_proxy, config.youtube_timeout)
+    cache_key = (config.youtube_proxy, config.youtube_timeout, config.youtube_cookie_path)
     with _api_cache_lock:
         if cache_key not in _api_cache:
             proxy_config = None
@@ -52,7 +67,7 @@ def _get_api(config):
                 proxy_config = GenericProxyConfig(https_url=config.youtube_proxy)
             _api_cache[cache_key] = YouTubeTranscriptApi(
                 proxy_config=proxy_config,
-                http_client=_TimeoutSession(config.youtube_timeout),
+                http_client=_build_http_client(config),
             )
         return _api_cache[cache_key]
 

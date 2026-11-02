@@ -47,6 +47,9 @@ class Config:
         self.youtube_proxy = self.get_config_value('youtube', 'proxy', None)
         self.youtube_timeout = self.get_config_value('youtube', 'timeout', 30)
         self.youtube_max_chars = self.get_config_value('youtube', 'max_chars', None)
+        # Netscape-format cookie file exported from a logged-in browser; YouTube
+        # authenticated requests bypass the "confirm you're not a bot" IP wall
+        self.youtube_cookie_path = self.get_config_value('youtube', 'cookie_path', None)
 
         self.categories = self.c.get('categories', {}) or {}
         if not isinstance(self.categories, dict):

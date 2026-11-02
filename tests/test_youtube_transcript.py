@@ -132,6 +132,27 @@ class YoutubeTranscriptTestCase(unittest.TestCase):
         ):
             self.assertEqual(self.module.fetch_entry_transcript(config, entry), "a" * 10)
 
+    def test_cookies_loaded_into_http_client(self):
+        config = self.make_config()
+        cookie_file = Path("youtube_cookies.txt")
+        cookie_file.write_text(
+            "# Netscape HTTP Cookie File\n"
+            "# https://curl.se/docs/http-cookies.html\n\n"
+            ".youtube.com\tTRUE\t/\tTRUE\t0\tCONSENT\tYES+1\n",
+            encoding="utf8",
+        )
+        config.youtube_cookie_path = str(cookie_file)
+        client = self.module._build_http_client(config)
+        self.assertTrue(any(c.name == "CONSENT" for c in client.cookies))
+
+    def test_invalid_cookie_file_does_not_raise(self):
+        config = self.make_config()
+        cookie_file = Path("youtube_cookies.txt")
+        cookie_file.write_text("placeholder", encoding="utf8")
+        config.youtube_cookie_path = str(cookie_file)
+        client = self.module._build_http_client(config)  # must not raise
+        self.assertIsNone(client.cookies.get("CONSENT"))
+
 
 if __name__ == "__main__":
     unittest.main()
